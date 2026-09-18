@@ -11,9 +11,11 @@
 
 ##  Repository Structure
 
+```
 assignment_1/
 │
 ├── lists.ipynb
 ├── tuples.ipynb
 ├── dictionaries.ipynb
 └── numpy.ipynb
+```
