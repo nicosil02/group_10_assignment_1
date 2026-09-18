@@ -9,4 +9,11 @@
 | Estefanny Mejía      | [@estefmej](https://github.com/estefmej)     |
 | Luz Supo             | [@lsupo](https://github.com/lsupo)     |
 
-## 📂 Repository Structure
+##  Repository Structure
+
+assignment_1/
+│
+├── lists.ipynb
+├── tuples.ipynb
+├── dictionaries.ipynb
+└── numpy.ipynb
