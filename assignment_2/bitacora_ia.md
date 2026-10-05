@@ -65,3 +65,61 @@ Al hacer la verificación pedida (`len(capitales)`), salieron **24 filas**: falt
 
 **4. ¿Cómo se corrigió?**
 Agregamos el Callao a mano con los datos de `tablas[3]` (capital: Callao) y reemplazamos "Huacho (de facto)" por **Lima**. Después volvimos a verificar: 25 filas. En la geocodificación también tuvimos que normalizar `admin1` (venía como "Departamento de Cusco", "Ancash" sin tilde, "Provincia Constitucional del Callao") para poder comprobar que cada capital estaba en su departamento; con eso, 0 filas sin coincidir.
+
+**Momento 1 – Parte 1: el DS 036-2023-PCM quedaba fuera de las normas de lluvias**
+
+**1. ¿Qué se le pidió a la IA?**
+Que leyera el título completo de cada norma con requests y BeautifulSoup desde div.description y que quitara el texto extra del final ("DS N° ... PDF ... Descargar").
+
+**2. ¿Qué respondió?**
+En python
+def limpiar_titulo(texto):
+    texto = re.sub(r"\s+", " ", texto).strip()
+    limpio = PATRON_EXTRA.sub("", texto).strip()
+    return limpio if len(limpio) >= 40 else texto
+
+**3. ¿Qué estaba mal y cómo nos dimos cuenta?**
+3. El código asumía que div.description siempre trae el título real de la norma. En el DS 036-2023-PCM solo traía:
+
+Declaratoria de Estado de Emergencia DS N° 036-2023-PCM.pdf PDF 1.5 MB Descargar
+
+Como el texto limpio era muy corto, la función devolvía el texto sin limpiar. Ese título no menciona lluvias, así que el decreto quedaba con es_lluvia = False, motivo = "otro" y sin departamento: se perdía un decreto de lluvias.
+
+Nos dimos cuenta al revisar las filas con motivo = "otro" (paso 10). Era el único título que no decía ni dónde ni por qué se declaraba la emergencia. Abrimos el PDF y su título real es "...distritos de Ancón, Pucusana, Punta Hermosa, Punta Negra, San Bartolo y Santa María del Mar de la provincia y departamento de Lima, por impacto de daños ante intensas precipitaciones pluviales". Además, el considerando menciona el ciclón Yaku.
+
+**4. ¿Cómo se corrigió?**
+Agregamos una celda de corrección manual antes de la clasificación, donde reemplazamos el titulo_completo del DS 036 por el título copiado del PDF. Al volver a correr, el decreto quedó como declara, impacto de daños y departamento Lima. Dejamos explicada la corrección en el notebook.
+
+**Momento 2 – Parte 1: la primera corrección que propuso la IA estaba incompleta**
+
+**1. ¿Qué se le pidió a la IA?**
+1. Cómo corregir el DS 036 si al revisar el PDF resultaba ser de lluvias.
+
+**2. ¿Qué respondió?**
+En python
+# Corrección manual: la página del DS 036 no trae el título real (revisado en el PDF)
+fila = decretos["numero"].str.contains("036-2023-PCM")
+decretos.loc[fila, "es_lluvia"] = True
+
+**3. ¿Qué estaba mal y cómo nos dimos cuenta?**
+Cambiar solo es_lluvia hacía que el decreto pasara el filtro del paso 11, pero tipo, motivo y los departamentos también se calculan a partir del título. Con el título vacío, el DS 036 habría quedado con motivo = "otro" y sin departamento, así que no habría sumado ninguna declaratoria a Lima en decretos_por_departamento.csv. Nos dimos cuenta al revisar qué columnas dependían del título después de abrir el PDF.
+
+**4. ¿Cómo se corrigió?**
+En vez de cambiar una sola columna, reemplazamos el título antes de la clasificación (ver Entrada 1). Así las columnas es_lluvia, tipo, motivo y departamentos se recalculan solas con el mismo código que usan las demás normas.
+
+
+**Momento 3 – Parte 1: el filtro por PCM dejaba pasar directivas de 2015**
+
+**1. ¿Qué se le pidió a la IA?**
+Que quitara las normas de otras instituciones, quedándonos solo con las que tienen /institucion/pcm/ en el enlace (paso 8).
+
+**2. ¿Qué respondió?**
+En python
+es_pcm = decretos["enlace"].str.contains("/institucion/pcm/", na=False)
+decretos = decretos[es_pcm].reset_index(drop=True)
+
+**3. ¿Qué estaba mal y cómo nos dimos cuenta?**
+ El filtro por institución funciona, pero no basta para quedarse solo con los decretos de la temporada. Al revisar las normas con motivo = "otro" aparecieron dos Directivas de 2015 (Directiva N.° 005-2015-PCM/SGRD y N.° 004-2015-PCM/SGRD, sobre simulacros por el Fenómeno El Niño). Son de la PCM, así que pasaron el filtro, pero no son decretos de emergencia de 2023. El buscador las devolvió porque su texto incluye "declarados en Estado de Emergencia".
+
+**4. ¿Cómo se corrigió?**
+Comprobamos que estas directivas no mencionan lluvias ni precipitaciones, así que el filtro es_lluvia del paso 11 las elimina. Lo verificamos con otros["es_lluvia"].value_counts(): de las 28 normas con motivo = "otro", 26 son False y solo 2 son de lluvias (DS 043 y DS 065). Dejamos anotado en el notebook que el filtro por institución no garantiza que todas las normas sean decretos de la temporada.
