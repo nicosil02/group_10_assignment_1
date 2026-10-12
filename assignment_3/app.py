@@ -1,7 +1,7 @@
 """Dashboard de emergencias y lluvias por departamento.
 
 Correr en local:
-    uv run streamlit run app_2.py
+    uv run streamlit run app.py
 """
 
 from pathlib import Path
@@ -36,7 +36,7 @@ VARIABLES = {
 # cada vez que alguien mueve un filtro y la app va lentísima.
 @st.cache_data
 def cargar_tabla():
-    datos = pd.read_csv(CARPETA / "dataset.csv", dtype={"ubigeo": str})
+    datos = pd.read_csv(CARPETA / "datos" / "dataset.csv", dtype={"ubigeo": str})
     return datos
 
 @st.cache_data
@@ -48,7 +48,7 @@ def cargar_mapa():
     Todo se trabaja como TEXTO: si el ubigeo fuera número, 010101 sería 10101
     y sus 2 primeros dígitos darían "10" (Huánuco) en vez de "01" (Amazonas).
     """
-    distritos = gpd.read_file(CARPETA / "distritos.geojson")
+    distritos = gpd.read_file(CARPETA / "datos" / "distritos.geojson")
     distritos["ubigeo"] = distritos["ubigeo"].astype(str).str.zfill(6)
     distritos["ubigeo_depto"] = distritos["ubigeo"].str[:2]
 
