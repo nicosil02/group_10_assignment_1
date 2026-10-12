@@ -2,7 +2,7 @@
 
 **Grupo 10** · Fundamentos de Python · Assignment 3
 
-🔗 **App publicada:** [Por completar]
+🔗 **App publicada:** [[Por completar](https://assignment3g10.streamlit.app/)]
 
 Dashboard en Streamlit que compara, para los 25 departamentos del Perú, cuántas **declaratorias de Estado de Emergencia por lluvias** emitió la PCM entre el 1 de enero y el 31 de mayo de 2023 con **cuánto llovió** en cada departamento en ese mismo periodo. Tiene filtros por departamento y por rango de lluvia, métricas que cambian con la selección, un gráfico de dispersión, un gráfico de barras, un mapa departamental y la tabla de datos descargable.
 
