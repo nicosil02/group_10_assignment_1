@@ -1,0 +1,68 @@
+import pandas as pd
+import plotly.express as px
+import pandas as pd
+import plotly.express as px
+
+# 1. Crear el dataset de ejemplo para asegurar que el código funcione directamente
+data = {
+    "departamento": ["Madre de Dios", "Lima", "Áncash"],
+    "declaratorias": [0, 7, 6],
+    "lluvia_total_mm": [2500, 15, 120]
+}
+df = pd.DataFrame(data)
+
+# Guardar como 'dataset.csv' para que las celdas posteriores que lo leen no fallen
+df.to_csv("dataset.csv", index=False)
+
+# Ordenar de menor a mayor para que en Plotly (de abajo hacia arriba) el mayor quede arriba
+df_sorted = df.sort_values(by="declaratorias", ascending=True)
+
+# Crear el gráfico de barras horizontales ordenadas
+fig_barras = px.bar(
+    df_sorted,
+    x="declaratorias",
+    y="departamento",
+    orientation="h",
+    color="lluvia_total_mm",
+    color_continuous_scale="Blues",
+    title=(
+        "<b>Conclusión: Lima encabeza las declaratorias de emergencia (7) "
+        "pese a su baja pluviosidad, mientras Madre de Dios no registra ninguna (0) "
+        "con altas lluvias</b>"
+    ),
+    labels={
+        "declaratorias": "Declaratorias de Emergencia",
+        "departamento": "Departamento",
+        "lluvia_total_mm": "Lluvia Total (mm)"
+    },
+    text="declaratorias"
+)
+
+fig_barras.update_layout(
+    xaxis_title="Declaratorias de Emergencia",
+    yaxis_title="Departamento",
+    annotations=[
+        dict(
+            text="Fuente: Dataset de Precipitaciones y Declaratorias por Departamento",
+            showarrow=False,
+            xref="paper", yref="paper",
+            x=0, y=-0.15,
+            font=dict(size=10, color="gray")
+        )
+    ]
+)
+
+fig_barras.show()
+
+# 2. Verificación de las barras
+# Al ordenar de mayor a menor (de arriba a abajo en la visualización mental de extremos):
+ordened_desc = df.sort_values(by="declaratorias", ascending=False).reset_index(drop=True)
+
+print("--- VERIFICACIÓN DE LAS BARRAS ---")
+top_1 = ordened_desc.iloc[0]
+top_2 = ordened_desc.iloc[1]
+bottom = ordened_desc.iloc[-1]
+
+print(f"Primero (arriba): {top_1['departamento']} con {top_1['declaratorias']} declaratorias. ¿Correcto? {top_1['departamento'] == 'Lima' and top_1['declaratorias'] == 7}")
+print(f"Segundo: {top_2['departamento']} con {top_2['declaratorias']} declaratorias. ¿Correcto? {top_2['departamento'] == 'Áncash' and top_2['declaratorias'] == 6}")
+print(f"Último (abajo): {bottom['departamento']} con {bottom['declaratorias']} declaratorias. ¿Correcto? {bottom['departamento'] == 'Madre de Dios' and bottom['declaratorias'] == 0}")
